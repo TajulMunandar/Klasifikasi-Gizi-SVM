@@ -9,4 +9,5 @@ class Log extends Model
 {
     /** @use HasFactory<\Database\Factories\LogFactory> */
     use HasFactory;
+    protected $guarded = ['id'];
 }

@@ -9,4 +9,5 @@ class Classification extends Model
 {
     /** @use HasFactory<\Database\Factories\ClassificationFactory> */
     use HasFactory;
+    protected $guarded = ['id'];
 }

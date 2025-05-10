@@ -30,7 +30,24 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'username' => 'required|unique:users,username',
+                'password' => 'required|string|min:6',
+                'is_admin' => 'required|boolean',
+            ]);
+            User::create([
+                'name' => $request->name,
+                'username' => $request->username,
+                'password' => bcrypt($request->password),
+                'is_admin' => $request->is_admin,
+            ]);
+
+            return redirect()->route('user.index')->with('success', 'User berhasil ditambahkan.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat menambahkan user: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -54,7 +71,29 @@ class UserController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+
+
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'username' => 'required|unique:users,username,' . $id,
+                'is_admin' => 'required|boolean',
+            ]);
+            $user = User::findOrFail($id);
+            $user->name = $request->name;
+            $user->username = $request->username;
+            $user->is_admin = $request->is_admin;
+
+            if ($request->filled('password')) {
+                $user->password = bcrypt($request->password);
+            }
+
+            $user->save();
+
+            return redirect()->route('user.index')->with('success', 'User berhasil diperbarui.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal memperbarui user: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -62,6 +101,13 @@ class UserController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        try {
+            $user = User::findOrFail($id);
+            $user->delete();
+
+            return redirect()->route('user.index')->with('success', 'User berhasil dihapus.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal menghapus user: ' . $e->getMessage());
+        }
     }
 }

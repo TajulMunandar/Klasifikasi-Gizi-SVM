@@ -9,4 +9,5 @@ class Preprocessing extends Model
 {
     /** @use HasFactory<\Database\Factories\PreprocessingFactory> */
     use HasFactory;
+    protected $guarded = ['id'];
 }

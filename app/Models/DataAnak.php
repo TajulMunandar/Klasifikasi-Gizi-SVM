@@ -9,4 +9,5 @@ class DataAnak extends Model
 {
     /** @use HasFactory<\Database\Factories\DataAnakFactory> */
     use HasFactory;
+    protected $guarded = ['id'];
 }
