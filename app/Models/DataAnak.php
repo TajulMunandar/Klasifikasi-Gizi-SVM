@@ -10,4 +10,9 @@ class DataAnak extends Model
     /** @use HasFactory<\Database\Factories\DataAnakFactory> */
     use HasFactory;
     protected $guarded = ['id'];
+
+    public function Classification()
+    {
+        return $this->hasMany(Classification::class, 'id');
+    }
 }

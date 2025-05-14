@@ -21,6 +21,9 @@
                 <button class="btn btn-primary float-end" data-bs-toggle="modal" data-bs-target="#modalTambah">
                     <i class="fa fa-plus me-2"></i>Tambah
                 </button>
+                <button class="btn btn-success float-end me-2" data-bs-toggle="modal" data-bs-target="#modalTambah">
+                    <i class="fa fa-download me-2"></i>Import
+                </button>
             </div>
         </div>
         <div class="card-body">
