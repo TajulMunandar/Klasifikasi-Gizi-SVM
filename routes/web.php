@@ -25,3 +25,5 @@ Route::prefix('/dashboard')->group(function () {
     Route::resource('/preprocessing', PreprocessingController::class);
     Route::resource('/hasil-training', HasilTrainingController::class);
 });
+
+Route::redirect('/', '/login');

@@ -25,7 +25,7 @@ class AuthController extends Controller
         // Validate form input
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'username' => 'required|string|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
         ]);
 
@@ -38,7 +38,7 @@ class AuthController extends Controller
         // Create a new user
         User::create([
             'name' => $request->name,
-            'email' => $request->email,
+            'username' => $request->username,
             'password' => Hash::make($request->password),
             'is_admin' => 2,
         ]);
@@ -50,7 +50,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         // Validate login input
-        $credentials = $request->only('email', 'password');
+        $credentials = $request->only('username', 'password');
 
         if (Auth::attempt($credentials)) {
             // Authentication passed, redirect to dashboard
@@ -58,7 +58,7 @@ class AuthController extends Controller
         }
 
         // Authentication failed, redirect back with error
-        return redirect()->route('login')->withErrors(['email' => 'Invalid credentials.']);
+        return redirect()->route('login')->withErrors(['username' => 'Invalid credentials.']);
     }
 
     // Handle logout
