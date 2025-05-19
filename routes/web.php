@@ -24,6 +24,7 @@ Route::prefix('/dashboard')->group(function () {
     Route::post('/data-anak/import', [DataAnakController::class, 'import'])->name('data-aktual.import');
     Route::resource('/preprocessing', PreprocessingController::class);
     Route::resource('/hasil-training', HasilTrainingController::class);
+    Route::post('/import', [DataAnakController::class, 'import'])->name('import');
 });
 
 Route::redirect('/', '/login');
