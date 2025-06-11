@@ -245,11 +245,15 @@ class DataAnakController extends Controller
                 'usia_ukur'      => trim($row[17]),
                 'tgl_pengukuran' => $tanggalUkur,
                 'berat'          => floatval($row[19]),
+                'tinggi'          => floatval($row[20]),
                 'cara_ukur'      => trim($row[21]),
                 'lila'           => floatval($row[22]),
                 'bb_u'           => trim($row[23]),
+                'zs_bb_u'          => floatval($row[24]),
                 'tb_u'           => trim($row[25]),
+                'zs_tb_u'          => floatval($row[26]),
                 'bb_tb'          => trim($row[27]),
+                'zs_bb_tb'          => floatval($row[28]),
                 'label_gizi'     => $this->klasifikasiGizi($row[27]),
             ]);
         }
@@ -267,5 +271,24 @@ class DataAnakController extends Controller
             'obesitas' => 4,
             default => 2, // default: gizi baik
         };
+    }
+
+    public function getData()
+    {
+        $data = DataAnak::select(
+            'nama as Nama',
+            'jk as JK',
+            'usia_ukur as Usia Saat Ukur',
+            'berat as Berat',
+            'tinggi as Tinggi',
+            'zs_bb_u as ZS BB/U',
+            'zs_tb_u as ZS TB/U',
+            'zs_bb_tb as ZS BB/TB',
+            'bb_tb as BB/TB'
+        )
+            ->whereNotNull('bb_tb') // hanya ambil data yang sudah ada label klasifikasi
+            ->get();
+
+        return response()->json($data);
     }
 }

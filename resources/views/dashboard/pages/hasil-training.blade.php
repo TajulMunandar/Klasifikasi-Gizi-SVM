@@ -1,27 +1,13 @@
 @extends('dashboard.layouts.main')
 
 @section('content')
-    @if (session('success'))
-        <div class="alert alert-success alert-dismissible fade show mt-2" role="alert">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-
-    @if (session('error'))
-        <div class="alert alert-danger alert-dismissible fade show mt-2" role="alert">
-            {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-
     <div class="card">
         <div class="row pt-3 pe-3">
             <div class="col">
                 <!-- Tombol Tambah -->
-                <a href="{{ route('hasil-training.create') }}" class="btn btn-primary float-end">
+                <button id="run-training-btn" class="btn btn-primary float-end">
                     <i class="fa fa-plus me-2"></i>Klasifikasi Baru
-                </a>
+                </button>
             </div>
         </div>
         <div class="card-body">
@@ -71,6 +57,51 @@
             $('.dataTables_filter input[type="search"]').css({
                 "marginBottom": "10px"
             });
+
+            // Handler tombol Klasifikasi Baru
+            $('#run-training-btn').click(function() {
+                const btn = $(this);
+                btn.prop('disabled', true).html(
+                    '<span class="spinner-border spinner-border-sm me-2"></span>Proses...');
+
+                fetch('http://localhost:5000/run-training')
+                    .then(response => {
+                        return response.json().then(data => {
+                            if (response.ok) {
+                                showAlert('success', data.message ||
+                                    'Training berhasil dijalankan.');
+                                setTimeout(() => location.reload(), 1500);
+                            } else {
+                                showAlert('danger', data.message ||
+                                    'Terjadi kesalahan saat training.');
+                            }
+                            console.log('Parsed response:', data);
+                        }).catch(e => {
+                            console.error('Gagal parsing JSON:', e);
+                            showAlert('danger',
+                            'Respons dari server tidak valid (bukan JSON).');
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Fetch error:', error);
+                        showAlert('danger', 'Tidak dapat terhubung ke server Flask.');
+                    })
+                    .finally(() => {
+                        btn.prop('disabled', false).html(
+                            '<i class="fa fa-plus me-2"></i>Klasifikasi Baru');
+                    });
+            });
+
+
+            // Fungsi untuk menampilkan alert dinamis
+            function showAlert(type, message) {
+                const alert = `
+                <div class="alert alert-${type} alert-dismissible fade show mt-2" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>`;
+                $('.card').before(alert);
+            }
         });
     </script>
 @endpush

@@ -5,7 +5,7 @@
         <div class="card mb-2">
             <div class="card-body">
 
-                <form method="POST">
+                <form method="POST" id="formKlasifikasi">
                     @csrf
                     <div class="row mb-3">
                         <label for="usia_bulan" class="col-sm-2 col-form-label">Usia (Bulan)</label>
@@ -81,23 +81,12 @@
                 <table class="table table-bordered table-striped" id="myTable">
                     <thead>
                         <tr>
-                            <th>Nama</th>
+                            <th>Jenis Kelamin</th>
                             <th>Klasifikasi</th>
                             <th>Probabilitas</th>
-                            <th>F1 Score</th>
-                            <th>Akurasi</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {{-- @foreach ($hasilKlasifikasi as $item)
-                            <tr>
-                                <td>{{ $item->dataAnak->jenis_kelamin == 'L' ? 'Laki-laki' : 'Perempuan' }}</td>
-                                <td><strong>{{ $item->klasifikasi }}</strong></td>
-                                <td>{{ $item->probabilitas }}</td>
-                                <td>{{ $item->f1_score }}</td>
-                                <td>{{ $item->accuracy }}</td>
-                            </tr>
-                        @endforeach --}}
                     </tbody>
                 </table>
             </div>
@@ -111,18 +100,57 @@
     <script>
         var isMobile = window.innerWidth <= 768;
         $(document).ready(function() {
-            $('#myTable').DataTable({
-                "language": {
-                    "search": "",
-                    "searchPlaceholder": "Search...",
-                    "decimal": ",",
-                    "thousands": ".",
-                },
-                "scrollX": false,
-            });
 
-            $('.dataTables_filter input[type="search"]').css({
-                "marginBottom": "10px"
+            $('#formKlasifikasi').on('submit', function(e) {
+                e.preventDefault(); // Cegah reload
+
+                const btn = $(this).find('button[type="submit"]');
+                btn.prop('disabled', true).text('Memproses...');
+
+                const data = {
+                    jenis_kelamin: $('#jenis_kelamin').val() === 'L' ? 1 : 0,
+                    usia_bulan: parseInt($('#usia_bulan').val()),
+                    berat: parseFloat($('#berat').val()),
+                    tinggi: parseFloat($('#tinggi').val()),
+                    zs_bb_u: parseFloat($('#zs_bbu').val()),
+                    zs_tb_u: parseFloat($('#zs_tbu').val()),
+                    zs_bb_tb: parseFloat($('#zs_bb_tb').val()),
+                };
+
+                fetch('http://localhost:5000/predict', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    })
+                    .then(res => res.json())
+                    .then(response => {
+                        btn.prop('disabled', false).text('Klasifikasi');
+                        if (response.error) {
+                            alert("Gagal klasifikasi: " + response.error);
+                            return;
+                        }
+
+                        // Masukkan ke tabel hasil
+                        const newRow = `
+                <tr>
+                    <td>${$('#jenis_kelamin').val() === 'L' ? 'Laki-laki' : 'Perempuan'}</td>
+                    <td><strong>${response.prediksi}</strong></td>
+                    <td>${response.probabilitas}</td>
+                    <td>-</td>
+                    <td>-</td>
+                </tr>
+            `;
+                        $('#myTable tbody').append(newRow);
+                        $('html, body').animate({
+                            scrollTop: $('#myTable').offset().top
+                        }, 600);
+                    })
+                    .catch(error => {
+                        btn.prop('disabled', false).text('Klasifikasi');
+                        alert("Terjadi kesalahan: " + error);
+                    });
             });
         });
     </script>

@@ -4,17 +4,36 @@ namespace App\Http\Controllers;
 
 use App\Models\Preprocessing;
 use Illuminate\Http\Request;
+use Yajra\DataTables\DataTables;
 
 class PreprocessingController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $page = 'Preprocessing';
-        $preprocessings = Preprocessing::all();
-        return view('dashboard.pages.preprocessing', compact('page', 'preprocessings'));
+
+        if ($request->ajax()) {
+            $data = Preprocessing::query();
+
+            return DataTables::of($data)
+                ->addIndexColumn()
+                ->editColumn('jenis_kelamin', fn($row) => $row->jenis_kelamin == 1 ? 'Laki-laki' : 'Perempuan')
+                ->editColumn('label_gizi', function ($row) {
+                    return match ($row->label_gizi) {
+                        0 => 'Gizi Baik',
+                        1 => 'Gizi Kurang',
+                        2 => 'Gizi Buruk',
+                        3 => 'Risiko Gizi Lebih',
+                        default => 'Tidak Diketahui',
+                    };
+                })
+                ->make(true);
+        }
+
+        return view('dashboard.pages.preprocessing', compact('page'));
     }
 
     /**
@@ -30,7 +49,11 @@ class PreprocessingController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        foreach ($request->all() as $item) {
+            Preprocessing::create($item);
+        }
+
+        return response()->json(['message' => 'Data preprocessing berhasil disimpan'], 201);
     }
 
     /**

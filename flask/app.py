@@ -1,86 +1,105 @@
-import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.svm import SVC
-from sklearn.metrics import classification_report
-import re
+from flask import Flask, jsonify,make_response, request
+from flask_cors import CORS
+from preprocessing import fetch_and_preprocess_data
+from training import train_model
+import requests
+import joblib
 
-# Baca data
-df = pd.read_csv("flask/data_real.csv")
-
-
-# Konversi usia ke bulan
-def parse_age(age_str):
-    match = re.match(r"(\d+) Tahun - (\d+) Bulan", str(age_str))
-    if match:
-        years = int(match.group(1))
-        months = int(match.group(2))
-        return years * 12 + months
-    return None
+app = Flask(__name__)
+CORS(app)
 
 
-df["Usia Bulan"] = df["Usia Saat Ukur"].apply(parse_age)
+@app.route("/run-preprocessing")
+def run_preprocessing():
+    try:
+        source_api = "http://localhost:8000/api/data-anak"
+        target_api = "http://localhost:8000/api/preprocessings"
 
-# Konversi kolom numerik
-df["ZS BB/U"] = pd.to_numeric(df["ZS BB/U"], errors="coerce")
-df["ZS TB/U"] = pd.to_numeric(df["ZS TB/U"], errors="coerce")
-df["ZS BB/TB"] = pd.to_numeric(df["ZS BB/TB"], errors="coerce")
-df["Berat"] = pd.to_numeric(df["Berat"], errors="coerce")
-df["Tinggi"] = pd.to_numeric(df["Tinggi"], errors="coerce")
+        processed_data = fetch_and_preprocess_data(source_api)
 
-# Tambahkan jenis kelamin ke dalam fitur
-# Misalkan "Jenis Kelamin" berisi 'L' untuk laki-laki dan 'P' untuk perempuan
-df["Jenis Kelamin"] = df["JK"].apply(lambda x: 1 if x == "L" else 0)
+        response = requests.post(target_api, json=processed_data)
+
+        print("Laravel response:", response.status_code)
+        print("Response text:", response.text)
+
+        if response.status_code == 201:
+            return (
+                jsonify({"message": "Preprocessing berhasil dikirim ke database"}),
+                200,
+            )
+        else:
+            return (
+                jsonify(
+                    {
+                        "message": "Gagal mengirim data ke Laravel",
+                        "details": response.text,
+                    }
+                ),
+                500,
+            )
+
+    except Exception as e:
+        print("ERROR:", str(e))
+        return (
+            jsonify(
+                {"message": "Terjadi kesalahan saat preprocessing", "error": str(e)}
+            ),
+            500,
+        )
 
 
-# Buat label dari kolom "BB/U"
-def label_gizi(bb_label):
-    if pd.isna(bb_label):
-        return None
-    bb_label = str(bb_label).strip().lower()
-    return 0 if "gizi baik" in bb_label else 1
+@app.route("/run-training")
+def run_training():
+    try:
+        api_url = "http://localhost:8000/api/train"
+        hasil = train_model(api_url)
+        return make_response(
+            jsonify({"message": "Training berhasil dijalankan", "data": hasil}), 200
+        )
+    except Exception as e:
+        print("ERROR:", str(e))
+        return make_response(
+            jsonify({"message": "Gagal menjalankan training", "error": str(e)}), 500
+        )
 
+@app.route('/predict', methods=['POST'])
+def predict():
+    try:
+        # Ambil data dari request
+        input_data = request.json
 
-df["Label"] = df["BB/TB"].apply(label_gizi)
+        # ✅ Muat model dari file
+        model = joblib.load("model_svc.pkl")
 
-# Pilih fitur yang relevan
-features = [
-    "Usia Bulan",
-    "Berat",
-    "Tinggi",
-    "ZS BB/U",
-    "ZS TB/U",
-    "ZS BB/TB",
-    "Jenis Kelamin",
-]
-df[features] = df[features].apply(pd.to_numeric, errors="coerce")
+        # Siapkan data dalam format array 2D
+        features = [
+            input_data["jenis_kelamin"],
+            input_data["usia_bulan"],
+            input_data["berat"],
+            input_data["tinggi"],
+            input_data["zs_bb_u"],
+            input_data["zs_tb_u"],
+            input_data["zs_bb_tb"],
+        ]
+        X_input = [features]
 
-# Hapus baris dengan nilai kosong
-df = df.dropna(subset=features + ["Label", "Nama"])
+        # Prediksi
+        prediction = model.predict(X_input)[0]
+        probability = model.predict_proba(X_input)[0].max()
 
-# Pisahkan fitur dan label
-X = df[features]
-y = df["Label"]
+        label_map = {
+            0: "Gizi Baik",
+            1: "Gizi Kurang",
+            2: "Gizi Buruk",
+            3: "Risiko Gizi Lebih",
+        }
 
-# Split data
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.3, random_state=42, stratify=y
-)
+        return jsonify({
+            "prediksi": label_map.get(prediction, "Tidak Dikenal"),
+            "probabilitas": round(float(probability), 4)
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-# Latih model
-model = SVC(kernel="linear", class_weight="balanced")
-model.fit(X_train, y_train)
-
-# Prediksi dan evaluasi
-y_pred = model.predict(X_test)
-
-# Tampilkan hasil
-print("\nNama\t\t\tStatus Gizi")
-for idx, pred in zip(X_test.index, y_pred):
-    nama = df.loc[idx, "Nama"]
-    status = "Kurang Gizi" if pred == 1 else "Gizi Baik"
-    print(f"{nama}\t{status}")
-
-# Laporan klasifikasi
-print(
-    "\nLaporan Klasifikasi:\n", classification_report(y_test, y_pred, zero_division=0)
-)
+if __name__ == "__main__":
+    app.run(debug=True)

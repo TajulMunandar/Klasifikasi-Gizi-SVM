@@ -30,8 +30,12 @@ return new class extends Migration
             $table->float('berat');
             $table->string('cara_ukur');
             $table->float('lila');
+            $table->float('tinggi');
+            $table->float('zs_bb_u');
             $table->string('bb_u');
+            $table->float('zs_tb_u');
             $table->string('tb_u');
+            $table->float('zs_bb_tb');
             $table->string('bb_tb');
             $table->unsignedTinyInteger('label_gizi');
             $table->timestamps();
