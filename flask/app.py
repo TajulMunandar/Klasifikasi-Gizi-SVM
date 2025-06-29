@@ -1,4 +1,4 @@
-from flask import Flask, jsonify,make_response, request
+from flask import Flask, jsonify, make_response, request
 from flask_cors import CORS
 from preprocessing import fetch_and_preprocess_data
 from training import train_model
@@ -54,7 +54,14 @@ def run_training():
         api_url = "http://localhost:8000/api/train"
         hasil = train_model(api_url)
         return make_response(
-            jsonify({"message": "Training berhasil dijalankan", "data": hasil}), 200
+            jsonify(
+                {
+                    "message": "Training berhasil dijalankan",
+                    "data": hasil,
+                    "confusion_matrix": hasil["confusion_matrix"],
+                }
+            ),
+            200,
         )
     except Exception as e:
         print("ERROR:", str(e))
@@ -62,7 +69,8 @@ def run_training():
             jsonify({"message": "Gagal menjalankan training", "error": str(e)}), 500
         )
 
-@app.route('/predict', methods=['POST'])
+
+@app.route("/predict", methods=["POST"])
 def predict():
     try:
         # Ambil data dari request
@@ -94,12 +102,15 @@ def predict():
             3: "Risiko Gizi Lebih",
         }
 
-        return jsonify({
-            "prediksi": label_map.get(prediction, "Tidak Dikenal"),
-            "probabilitas": round(float(probability), 4)
-        })
+        return jsonify(
+            {
+                "prediksi": label_map.get(prediction, "Tidak Dikenal"),
+                "probabilitas": round(float(probability), 4),
+            }
+        )
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)

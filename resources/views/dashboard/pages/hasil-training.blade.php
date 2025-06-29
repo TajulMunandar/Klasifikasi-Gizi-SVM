@@ -37,6 +37,14 @@
                     @endforeach
                 </tbody>
             </table>
+            <div id="confusion-matrix-container" class="mt-4" style="display:none;">
+                <h5>Confusion Matrix</h5>
+                <div class="table-responsive">
+                    <table id="confusion-matrix" class="table table-bordered table-sm">
+                        <!-- Will be populated via JavaScript -->
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 @endsection
@@ -58,6 +66,24 @@
                 "marginBottom": "10px"
             });
 
+            function renderConfusionMatrix(matrix) {
+                const labels = ["Gizi Baik", "Gizi Kurang", "Gizi Buruk", "Risiko Gizi Lebih"];
+                const container = $('#confusion-matrix');
+                container.empty();
+
+                const headers = labels.map(label => `<th>${label}</th>`).join('');
+                container.append(`<thead><tr><th></th>${headers}</tr></thead>`);
+
+                const rows = matrix.map((row, i) => {
+                    const cols = row.map(val => `<td>${val}</td>`).join('');
+                    return `<tr><th>${labels[i]}</th>${cols}</tr>`;
+                });
+
+                container.append(`<tbody>${rows.join('')}</tbody>`);
+                $('#confusion-matrix-container').show();
+            }
+
+
             // Handler tombol Klasifikasi Baru
             $('#run-training-btn').click(function() {
                 const btn = $(this);
@@ -70,7 +96,12 @@
                             if (response.ok) {
                                 showAlert('success', data.message ||
                                     'Training berhasil dijalankan.');
-                                setTimeout(() => location.reload(), 1500);
+
+                                console.log(data.confusion_matrix);
+                                if (data.confusion_matrix) {
+                                    renderConfusionMatrix(data.confusion_matrix);
+                                }
+                                // setTimeout(() => location.reload(), 3000);
                             } else {
                                 showAlert('danger', data.message ||
                                     'Terjadi kesalahan saat training.');
@@ -79,7 +110,7 @@
                         }).catch(e => {
                             console.error('Gagal parsing JSON:', e);
                             showAlert('danger',
-                            'Respons dari server tidak valid (bukan JSON).');
+                                'Respons dari server tidak valid (bukan JSON).');
                         });
                     })
                     .catch(error => {
