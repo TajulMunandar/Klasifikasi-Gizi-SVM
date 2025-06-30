@@ -4,6 +4,7 @@
     <div class="row">
         <div class="col-lg-3 col-md-3 col-12">
             <div class="card">
+
                 <span class="mask bg-primary opacity-10 border-radius-lg"></span>
                 <div class="card-body p-3 position-relative">
                     <div class="row">
@@ -114,7 +115,14 @@
 
     <div class="card mt-3">
         <div class="card-body">
-            <h5>Hasil Klasifikasi</h5>
+            <div class="row">
+                <div class="col">
+                    <h5>Hasil Klasifikasi</h5>
+                </div>
+                <div class="col">
+                    <a href="{{ route('laporan') }}" class="btn btn-primary"> Laporan</a>
+                </div>
+            </div>
             <table class="table table-bordered table-striped" id="myTable">
                 <thead>
                     <tr>

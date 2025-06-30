@@ -37,4 +37,35 @@ class DashboardController extends Controller
         $page = 'Dashboard';
         return view('dashboard.pages.index', compact('page', 'hasilKlasifikasi', 'daftarDesa', 'jumlahGiziBaik', 'jumlahGiziKurangBaik', 'RisikoGiziLebih', 'jumlahGiziBuruk'));
     }
+
+    public function statistikKlasifikasiPerDesa()
+    {
+        $page = 'Laporan';
+        $latest = Classification::select(DB::raw('MAX(id) as id'))
+            ->groupBy('id_data_anak');
+
+        $classifications = Classification::with('dataAnak')
+            ->whereIn('id', $latest->pluck('id'))
+            ->get();
+
+        $grouped = $classifications->groupBy(function ($item) {
+            return $item->dataAnak->desa ?? 'Tidak Diketahui';
+        });
+
+        $data = [];
+
+        foreach ($grouped as $desa => $items) {
+            $data[] = [
+                'desa' => $desa,
+                'total' => $items->count(),
+                'Gizi Baik' => $items->where('klasifikasi', 'Gizi Baik')->count(),
+                'Gizi Kurang' => $items->where('klasifikasi', 'Gizi Kurang')->count(),
+                'Gizi Buruk' => $items->where('klasifikasi', 'Gizi Buruk')->count(),
+                'Risiko Gizi Lebih' => $items->where('klasifikasi', 'Risiko Gizi Lebih')->count(),
+            ];
+        }
+
+        // Tampilkan ke view
+        return view('dashboard.pages.laporan', compact('page', 'data'));
+    }
 }

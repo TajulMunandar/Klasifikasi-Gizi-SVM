@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DataAnakController;
 use App\Http\Controllers\HasilTrainingController;
 use App\Http\Controllers\PreprocessingController;

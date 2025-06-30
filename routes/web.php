@@ -18,6 +18,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::prefix('/dashboard')->group(function () {
     Route::get('', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/statistik-klasifikasi', [DashboardController::class, 'statistikKlasifikasiPerDesa'])->name('laporan');
     Route::resource('/user', UserController::class);
     Route::post('/users/{id}/update-password', [UserController::class, 'updatePassword'])->name('users.updatePassword');
     Route::resource('/klasifikasi', KlasifikasiController::class);
