@@ -7,6 +7,27 @@
 
                 <form method="POST" id="formKlasifikasi">
                     @csrf
+
+                    <div class="row mb-3">
+                        <label for="nama_anak" class="col-sm-12 col-form-label">Nama Anak</label>
+                        <div class="col-sm-12">
+                            <input type="text" class="form-control" id="nama_anak" name="nama_anak" required>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <label for="nama_ortu" class="col-sm-12 col-form-label">Nama Orang Tua</label>
+                        <div class="col-sm-12">
+                            <input type="text" class="form-control" id="nama_ortu" name="nama_ortu" required>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <label for="kampung" class="col-sm-12 col-form-label">Kampung</label>
+                        <div class="col-sm-12">
+                            <input type="text" class="form-control" id="kampung" name="kampung" required>
+                        </div>
+                    </div>
                     <div class="row mb-3">
                         <label for="usia_bulan" class="col-sm-2 col-form-label">Usia (Bulan)</label>
                         <div class="col-sm-12">
@@ -81,6 +102,9 @@
                 <table class="table table-bordered table-striped" id="myTable">
                     <thead>
                         <tr>
+                            <th>Nama Anak</th>
+                            <th>Nama Orang Tua</th>
+                            <th>Kampung</th>
                             <th>Jenis Kelamin</th>
                             <th>Klasifikasi</th>
                             <th>Probabilitas</th>
@@ -134,13 +158,14 @@
 
                         // Masukkan ke tabel hasil
                         const newRow = `
-                <tr>
-                    <td>${$('#jenis_kelamin').val() === 'L' ? 'Laki-laki' : 'Perempuan'}</td>
-                    <td><strong>${response.prediksi}</strong></td>
-                    <td>${response.probabilitas}</td>
-                    <td>-</td>
-                    <td>-</td>
-                </tr>
+               <tr>
+    <td>${$('#nama_anak').val()}</td>
+    <td>${$('#nama_ortu').val()}</td>
+    <td>${$('#kampung').val()}</td>
+    <td>${$('#jenis_kelamin').val() === 'L' ? 'Laki-laki' : 'Perempuan'}</td>
+    <td><strong>${response.prediksi}</strong></td>
+    <td>${response.probabilitas}</td>
+</tr>
             `;
                         $('#myTable tbody').append(newRow);
                         $('html, body').animate({
