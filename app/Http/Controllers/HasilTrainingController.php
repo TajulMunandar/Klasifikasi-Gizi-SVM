@@ -32,6 +32,7 @@ class HasilTrainingController extends Controller
      */
     public function store(Request $request)
     {
+        Classification::truncate();
         foreach ($request->input('hasil') as $hasil) {
             $nama = $hasil['nama'];
 

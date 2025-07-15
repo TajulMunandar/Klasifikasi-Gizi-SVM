@@ -1,6 +1,7 @@
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import accuracy_score
 import pandas as pd
 import requests
 import json
@@ -68,6 +69,8 @@ def train_model(api_url):
         output_dict=True,
     )
 
+    accuracy = accuracy_score(y_test, y_pred)
+
     cm = confusion_matrix(y_test, y_pred)
     cm_list = cm.tolist()  # Convert numpy array to list for JSON serialization
     print(cm_list)
@@ -81,4 +84,9 @@ def train_model(api_url):
     except Exception as e:
         print("Gagal kirim hasil ke Laravel:", str(e))
 
-    return {"hasil": result, "evaluasi": report, "confusion_matrix": cm_list}
+    return {
+        "hasil": result,
+        "evaluasi": report,
+        "confusion_matrix": cm_list,
+        "accuracy": accuracy,
+    }

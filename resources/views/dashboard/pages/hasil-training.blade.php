@@ -2,6 +2,35 @@
 
 @section('content')
     <div class="card">
+        <div class="card-body">
+            <div class="mb-3">
+                <h6>Akurasi Keseluruhan: <span id="overall-accuracy" class="badge bg-success">-</span></h6>
+            </div>
+            <div class="row">
+                <div class="col col-6">
+                    <div id="classification-report-container" class="mt-4" style="display:none;">
+                        <h5>Classification Report</h5>
+                        <div class="table-responsive">
+                            <table id="classification-report" class="table table-bordered table-sm">
+                                <!-- Akan diisi dengan JS -->
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col col-6">
+                    <div id="confusion-matrix-container" class="mt-4" style="display:none;">
+                        <h5>Confusion Matrix</h5>
+                        <div class="table-responsive">
+                            <table id="confusion-matrix" class="table table-bordered table-sm">
+                                <!-- Will be populated via JavaScript -->
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card mt-3">
         <div class="row pt-3 pe-3">
             <div class="col">
                 <!-- Tombol Tambah -->
@@ -17,8 +46,6 @@
                         <th>No</th>
                         <th>Nama Anak</th>
                         <th>Klasifikasi</th>
-                        <th>F1 Score</th>
-                        <th>Accuracy</th>
                         <th>Probabilitas</th>
                         <th>Tanggal</th>
                     </tr>
@@ -29,22 +56,13 @@
                             <td>{{ $loop->iteration }}</td>
                             <td>{{ $item->dataAnak->nama ?? '-' }}</td>
                             <td>{{ $item->klasifikasi }}</td>
-                            <td>{{ $item->f1_score }}</td>
-                            <td>{{ $item->accuracy }}</td>
                             <td>{{ $item->probabilitas }}</td>
                             <td>{{ $item->created_at->format('d-m-Y') }}</td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
-            <div id="confusion-matrix-container" class="mt-4" style="display:none;">
-                <h5>Confusion Matrix</h5>
-                <div class="table-responsive">
-                    <table id="confusion-matrix" class="table table-bordered table-sm">
-                        <!-- Will be populated via JavaScript -->
-                    </table>
-                </div>
-            </div>
+
         </div>
     </div>
 @endsection
@@ -65,6 +83,39 @@
             $('.dataTables_filter input[type="search"]').css({
                 "marginBottom": "10px"
             });
+
+            function renderClassificationReport(report) {
+                const labels = ["Gizi Baik", "Gizi Kurang", "Gizi Buruk", "Risiko Gizi Lebih"];
+                const tbody = labels.map(label => {
+                    const row = report[label];
+                    return `
+            <tr>
+                <td>${label}</td>
+                <td>${(row.precision * 100).toFixed(2)}%</td>
+                <td>${(row.recall * 100).toFixed(2)}%</td>
+                <td>${(row["f1-score"] * 100).toFixed(2)}%</td>
+            </tr>
+        `;
+                }).join("");
+
+                const html = `
+        <thead>
+            <tr>
+                <th>Label</th>
+                <th>Precision</th>
+                <th>Recall</th>
+                <th>F1-Score</th>
+
+            </tr>
+        </thead>
+        <tbody>
+            ${tbody}
+        </tbody>
+    `;
+                $('#classification-report').html(html);
+                $('#classification-report-container').show();
+            }
+
 
             function renderConfusionMatrix(matrix) {
                 const labels = ["Gizi Baik", "Gizi Kurang", "Gizi Buruk", "Risiko Gizi Lebih"];
@@ -100,6 +151,13 @@
                                 console.log(data.confusion_matrix);
                                 if (data.confusion_matrix) {
                                     renderConfusionMatrix(data.confusion_matrix);
+                                }
+                                if (data.evaluasi) {
+                                    renderClassificationReport(data.evaluasi);
+                                }
+                                if (data.accuracy !== undefined) {
+                                    const acc = (data.accuracy * 100).toFixed(2) + "%";
+                                    $("#overall-accuracy").text(acc);
                                 }
                                 // setTimeout(() => location.reload(), 3000);
                             } else {

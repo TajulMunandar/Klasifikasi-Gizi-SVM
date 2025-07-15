@@ -57,8 +57,10 @@ def run_training():
             jsonify(
                 {
                     "message": "Training berhasil dijalankan",
-                    "data": hasil,
+                    "data": hasil["hasil"],
                     "confusion_matrix": hasil["confusion_matrix"],
+                    "evaluasi": hasil["evaluasi"],  # ← Tambahkan ini
+                    "accuracy": hasil["accuracy"],
                 }
             ),
             200,
