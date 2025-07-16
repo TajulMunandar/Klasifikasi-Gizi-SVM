@@ -49,6 +49,9 @@
                         <th>Berat Badan</th>
                         <th>Cara Ukur</th>
                         <th>LILA</th>
+                        <th>ZS BB U</th>
+                        <th>ZS TB U</th>
+                        <th>ZS BB TB</th>
                         <th>BB/U</th>
                         <th>TB/U</th>
                         <th>BB/TB</th>
@@ -86,6 +89,14 @@
                         <input name="prov" class="form-control mb-2" placeholder="Provinsi" required>
                         <input name="kab" class="form-control mb-2" placeholder="Kabupaten" required>
                         <input name="kec" class="form-control mb-2" placeholder="Kecamatan" required>
+                        <input name="tinggi" type="number" step="0.01" class="form-control mb-2" placeholder="Tinggi"
+                            required>
+                        <input type="number" step="0.01" name="zs_bb_u" class="form-control mb-2"
+                            placeholder="Z-Score BB/U" required>
+                        <input type="number" step="0.01" name="zs_tb_u" class="form-control mb-2"
+                            placeholder="Z-Score TB/U" required>
+                        <input type="number" step="0.01" name="zs_bb_tb" class="form-control mb-2"
+                            placeholder="Z-Score BB/TB" required>
                     </div>
                     <div class="col-md-6">
                         <input name="desa" class="form-control mb-2" placeholder="Desa" required>
@@ -94,15 +105,17 @@
                         <input name="alamat" class="form-control mb-2" placeholder="Alamat" required>
                         <input type="text" name="usia_ukur" class="form-control mb-2" placeholder="Usia Ukur" required>
                         <input type="date" name="tgl_pengukuran" class="form-control mb-2" required>
-                        <input name="berat" class="form-control mb-2" placeholder="Berat Badan" required>
+                        <input type="number" step="0.01" name="berat" class="form-control mb-2"
+                            placeholder="Berat Badan" required>
                         <input name="cara_ukur" class="form-control mb-2" placeholder="Cara Ukur" required>
-                        <input name="lila" class="form-control mb-2" placeholder="LILA" required>
+                        <input type="number" step="0.01" name="lila" class="form-control mb-2"
+                            placeholder="LILA" required>
                         <input name="bb_u" class="form-control mb-2" placeholder="BB/U" required>
                         <input name="tb_u" class="form-control mb-2" placeholder="TB/U" required>
                         <input name="bb_tb" class="form-control mb-2" placeholder="BB/TB" required>
                         <select name="label_gizi" class="form-control mb-2" required>
-                            <option value="1">Gizi Kurang</option>
                             <option value="0">Gizi Buruk</option>
+                            <option value="1">Gizi Kurang</option>
                             <option value="2">Gizi Baik</option>
                             <option value="3">Risiko Gizi Lebih</option>
                         </select>
@@ -114,6 +127,7 @@
             </form>
         </div>
     </div>
+
 
 
     <!-- Modal Hapus -->
@@ -161,23 +175,37 @@
                     <input name="puskesmas" class="form-control mb-2" placeholder="Puskesmas" required>
                     <input name="posyandu" class="form-control mb-2" placeholder="Posyandu" required>
                     <input name="alamat" class="form-control mb-2" placeholder="Alamat" required>
-                    <input type="number" name="usia_ukur" class="form-control mb-2" placeholder="Usia Ukur (bulan)"
-                        required>
+                    <input type="text" name="usia_ukur" class="form-control mb-2"
+                        placeholder="usia ukur (contoh: 1 Tahun - 4 Bulan - 4 Hari)" required>
                     <input type="date" name="tgl_pengukuran" class="form-control mb-2" required>
                     <input type="number" step="0.01" name="berat" class="form-control mb-2"
                         placeholder="Berat Badan (kg)" required>
                     <input name="cara_ukur" class="form-control mb-2" placeholder="Cara Ukur" required>
                     <input type="number" step="0.01" name="lila" class="form-control mb-2"
                         placeholder="LILA (cm)" required>
-                    <input name="bb_u" class="form-control mb-2" placeholder="BB/U" required>
-                    <input name="tb_u" class="form-control mb-2" placeholder="TB/U" required>
-                    <input name="bb_tb" class="form-control mb-2" placeholder="BB/TB" required>
+                    <input type="number" step="0.01" name="tinggi" class="form-control mb-2"
+                        placeholder="Tinggi (cm)" required>
+
+                    <!-- Nilai Z-score -->
+                    <input type="number" step="0.01" name="zs_bb_u" class="form-control mb-2"
+                        placeholder="Z-Score BB/U" required>
+                    <input name="bb_u" class="form-control mb-2" placeholder="BB/U Keterangan" required>
+
+                    <input type="number" step="0.01" name="zs_tb_u" class="form-control mb-2"
+                        placeholder="Z-Score TB/U" required>
+                    <input name="tb_u" class="form-control mb-2" placeholder="TB/U Keterangan" required>
+
+                    <input type="number" step="0.01" name="zs_bb_tb" class="form-control mb-2"
+                        placeholder="Z-Score BB/TB" required>
+                    <input name="bb_tb" class="form-control mb-2" placeholder="BB/TB Keterangan" required>
+
                     <select name="label_gizi" class="form-control mb-2" required>
-                        <option value="1">Gizi Kurang</option>
                         <option value="0">Gizi Buruk</option>
+                        <option value="1">Gizi Kurang</option>
                         <option value="2">Gizi Baik</option>
                         <option value="3">Risiko Gizi Lebih</option>
                     </select>
+
                 </div>
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-primary">Tambah</button>
@@ -302,6 +330,18 @@
                         name: 'lila'
                     },
                     {
+                        data: 'zs_bb_u',
+                        name: 'zs_bb_u'
+                    },
+                    {
+                        data: 'zs_tb_u',
+                        name: 'zs_tb_u'
+                    },
+                    {
+                        data: 'zs_bb_tb',
+                        name: 'zs_bb_tb'
+                    },
+                    {
                         data: 'bb_u',
                         name: 'bb_u'
                     },
@@ -327,12 +367,19 @@
 
         document.addEventListener('click', function(e) {
             if (e.target.classList.contains('btn-edit')) {
-                currentEditData = e.target.dataset;
+                currentEditData = {
+                    ...e.target.dataset
+                }; // clone dataset
+
+                // Perbaiki: dataset hanya menyimpan string, jika butuh parsing angka, lakukan manual
+                // Misalnya jika kamu butuh ini sebagai float di sisi lain
+                // currentEditData.berat = parseFloat(currentEditData.berat || 0);
+
                 const modal = document.getElementById('modalEdit');
                 const form = modal.querySelector('form');
-                // Update action URL segera
+
+                // Set URL untuk PUT method
                 form.action = `/dashboard/data-anak/${currentEditData.id}`;
-                // Jangan isi form di sini
             }
         });
 
@@ -340,16 +387,21 @@
         const modalEdit = document.getElementById('modalEdit');
         modalEdit.addEventListener('shown.bs.modal', function() {
             if (!currentEditData) return;
+
             const form = modalEdit.querySelector('form');
             const fields = form.querySelectorAll('[name]');
 
             fields.forEach(field => {
-                if (field.name in currentEditData) {
+                const name = field.name;
+                if (currentEditData.hasOwnProperty(name)) {
+                    // Jika SELECT, set value sebagai string
                     if (field.tagName === 'SELECT') {
-                        field.value = String(currentEditData[field.name]);
+                        field.value = String(currentEditData[name]);
                     } else {
-                        field.value = currentEditData[field.name];
+                        field.value = currentEditData[name];
                     }
+                } else {
+                    field.value = ''; // default jika tidak tersedia
                 }
             });
         });

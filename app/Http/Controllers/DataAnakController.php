@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\DataAnakImport;
 use App\Models\DataAnak;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
 
 class DataAnakController extends Controller
@@ -27,6 +29,7 @@ class DataAnakController extends Controller
                 'prov',
                 'kab',
                 'kec',
+                'tinggi',
                 'desa',
                 'puskesmas',
                 'posyandu',
@@ -36,6 +39,9 @@ class DataAnakController extends Controller
                 'berat',
                 'cara_ukur',
                 'lila',
+                'zs_bb_u',
+                'zs_tb_u',
+                'zs_bb_tb',
                 'bb_u',
                 'tb_u',
                 'bb_tb'
@@ -57,6 +63,7 @@ class DataAnakController extends Controller
             data-prov="' . e($row->prov) . '"
             data-kab="' . e($row->kab) . '"
             data-kec="' . e($row->kec) . '"
+            data-tinggi="' . e($row->tinggi) . '"
             data-desa="' . e($row->desa) . '"
             data-puskesmas="' . e($row->puskesmas) . '"
             data-posyandu="' . e($row->posyandu) . '"
@@ -66,10 +73,14 @@ class DataAnakController extends Controller
             data-berat="' . e($row->berat) . '"
             data-cara_ukur="' . e($row->cara_ukur) . '"
             data-lila="' . e($row->lila) . '"
+            data-tinggi="' . e($row->tinggi) . '"
+            data-zs_bb_u="' . e($row->zs_bb_u) . '"
+            data-zs_tb_u="' . e($row->zs_tb_u) . '"
+            data-zs_bb_tb="' . e($row->zs_bb_tb) . '"
             data-bb_u="' . e($row->bb_u) . '"
             data-tb_u="' . e($row->tb_u) . '"
             data-bb_tb="' . e($row->bb_tb) . '"
-            data-label_gizi="' . (isset($row->label_gizi) ? e($row->label_gizi) : '') . '">
+            data-label_gizi="' . (isset($row->label_gizi) ? e($row->label_gizi) : '') . '"  >
             Edit
         </button>
 
@@ -122,11 +133,16 @@ class DataAnakController extends Controller
                 'tgl_pengukuran' => 'required|date',
                 'berat' => 'required|numeric',
                 'cara_ukur' => 'required|string',
-                'lila' => 'nullable|numeric',
-                'bb_u' => 'nullable|string',
-                'tb_u' => 'nullable|string',
-                'bb_tb' => 'nullable|string',
-                'label_gizi' => 'nullable',
+                'lila' => 'required|numeric',
+                'tinggi' => 'required|numeric',
+                'zs_bb_u' => 'required|numeric',
+                'bb_u' => 'required|string',
+                'zs_tb_u' => 'required|numeric',
+                'tb_u' => 'required|string',
+                'zs_bb_tb' => 'required|numeric',
+                'bb_tb' => 'required|string',
+
+                'label_gizi' => 'required|integer|in:0,1,2,3',
             ]);
 
             DataAnak::create($validated);
@@ -136,7 +152,6 @@ class DataAnakController extends Controller
             return redirect()->back()->with('error', 'Terjadi kesalahan saat menyimpan data: ' . $e->getMessage());
         }
     }
-
 
     /**
      * Display the specified resource.
@@ -177,11 +192,15 @@ class DataAnakController extends Controller
                 'tgl_pengukuran' => 'required|date',
                 'berat' => 'required|numeric',
                 'cara_ukur' => 'required|string',
-                'lila' => 'nullable|numeric',
-                'bb_u' => 'nullable|string',
-                'tb_u' => 'nullable|string',
-                'bb_tb' => 'nullable|string',
-                'label_gizi' => 'nullable',
+                'lila' => 'required|numeric',
+                'tinggi' => 'required|numeric',
+                'zs_bb_u' => 'required|numeric',
+                'bb_u' => 'required|string',
+                'zs_tb_u' => 'required|numeric',
+                'tb_u' => 'required|string',
+                'zs_bb_tb' => 'required|numeric',
+                'bb_tb' => 'required|string',
+                'label_gizi' => 'required|integer|in:0,1,2,3',
             ]);
 
             $anak = DataAnak::findOrFail($id);
@@ -212,66 +231,14 @@ class DataAnakController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|file',
+            'file' => 'required|mimes:xlsx,xls,csv',
         ]);
 
-        $file = $request->file('file');
-        $path = $file->getRealPath();
-
-        $data = array_map('str_getcsv', file($path));
-        $header = array_shift($data); // Buang header
-
-        foreach ($data as $row) {
-            if (count($row) < 32) continue; // Validasi jumlah kolom minimal
-
-            // Parsing tanggal lahir dan tanggal pengukuran
-            $tanggalLahir = Carbon::createFromFormat('n/j/Y', trim($row[4]))->format('Y-m-d');
-            $tanggalUkur  = Carbon::createFromFormat('n/j/Y', trim($row[18]))->format('Y-m-d');
-
-            // Mapping ke database
-            DataAnak::create([
-                'nik'            => trim($row[1]),
-                'nama'           => trim($row[2]),
-                'jk'             => trim($row[3]),
-                'tanggal_lahir'  => $tanggalLahir,
-                'nama_ortu'      => trim($row[7]),
-                'prov'           => trim($row[8]),
-                'kab'            => trim($row[9]),
-                'kec'            => trim($row[10]),
-                'puskesmas'      => trim($row[11]),
-                'desa'           => trim($row[12]),
-                'posyandu'       => trim($row[13]),
-                'alamat'         => trim($row[16]),
-                'usia_ukur'      => trim($row[17]),
-                'tgl_pengukuran' => $tanggalUkur,
-                'berat'          => floatval($row[19]),
-                'tinggi'          => floatval($row[20]),
-                'cara_ukur'      => trim($row[21]),
-                'lila'           => floatval($row[22]),
-                'bb_u'           => trim($row[23]),
-                'zs_bb_u'          => floatval($row[24]),
-                'tb_u'           => trim($row[25]),
-                'zs_tb_u'          => floatval($row[26]),
-                'bb_tb'          => trim($row[27]),
-                'zs_bb_tb'          => floatval($row[28]),
-                'label_gizi'     => $this->klasifikasiGizi($row[27]),
-            ]);
-        }
+        Excel::import(new DataAnakImport, $request->file('file'));
 
         return back()->with('success', 'File berhasil diimpor.');
     }
 
-    private function klasifikasiGizi($kategori)
-    {
-        return match (strtolower(trim($kategori))) {
-            'gizi buruk' => 0,
-            'gizi kurang' => 1,
-            'gizi baik' => 2,
-            'Risiko Gizi Lebih', 'gizi lebih' => 3,
-            'obesitas' => 4,
-            default => 2, // default: gizi baik
-        };
-    }
 
     public function getData()
     {

@@ -1,12 +1,19 @@
+# Import library yang dibutuhkan
 import pandas as pd
 import requests
 import re
 
 
+# Fungsi utama untuk mengambil data dari API dan melakukan preprocessing
 def fetch_and_preprocess_data(api_url):
+    # Ambil data dari API Laravel
     response = requests.get(api_url)
     data = response.json()
+
+    # Ubah data JSON menjadi DataFrame pandas
     df = pd.DataFrame(data)
+
+    # Tampilkan data awal sebelum preprocessing (debugging)
     print("DataFrame sebelum dropna:")
     print(
         df[
@@ -24,22 +31,29 @@ def fetch_and_preprocess_data(api_url):
         ]
     )
 
+    # Fungsi untuk mengubah format usia dari "X Tahun - Y Bulan" menjadi total bulan
     def parse_age(age_str):
         match = re.match(r"(\d+) Tahun - (\d+) Bulan", str(age_str))
         if match:
             years = int(match.group(1))
             months = int(match.group(2))
             return years * 12 + months
-        return None
+        return None  # Jika format tidak sesuai
 
+    # Tambahkan kolom usia dalam bulan
     df["usia_bulan"] = df["Usia Saat Ukur"].apply(parse_age)
+
+    # Konversi kolom numerik dari string ke float, jika gagal beri NaN
     df["zs_bb_u"] = pd.to_numeric(df["ZS BB/U"], errors="coerce")
     df["zs_tb_u"] = pd.to_numeric(df["ZS TB/U"], errors="coerce")
     df["zs_bb_tb"] = pd.to_numeric(df["ZS BB/TB"], errors="coerce")
     df["berat"] = pd.to_numeric(df["Berat"], errors="coerce")
     df["tinggi"] = pd.to_numeric(df["Tinggi"], errors="coerce")
+
+    # Konversi jenis kelamin: L = 1 (laki-laki), P = 0 (perempuan)
     df["jenis_kelamin"] = df["JK"].apply(lambda x: 1 if x == "L" else 0)
 
+    # Fungsi untuk mengubah label BB/TB menjadi nilai numerik klasifikasi gizi
     def label_gizi(bb_tb):
         if pd.isna(bb_tb):
             return None
@@ -53,12 +67,14 @@ def fetch_and_preprocess_data(api_url):
         elif bb_tb == "risiko gizi lebih":
             return 3
         elif bb_tb == "-":
-            return None  # atau bisa juga return 4 untuk kategori unknown
+            return None  # Bisa diubah jadi return 4 jika ingin kategorikan unknown
         else:
-            return None  # label tidak dikenali
+            return None  # Label tidak dikenali
 
+    # Tambahkan kolom label klasifikasi gizi
     df["label_gizi"] = df["BB/TB"].apply(label_gizi)
 
+    # Hapus baris yang memiliki data penting yang kosong (NaN)
     df = df.dropna(
         subset=[
             "usia_bulan",
@@ -69,11 +85,11 @@ def fetch_and_preprocess_data(api_url):
             "tinggi",
             "label_gizi",
             "jenis_kelamin",
-            "Nama",
+            "Nama",  # pastikan nama tidak kosong juga
         ]
     )
 
-    # Pilih kolom untuk dikirim ke Laravel
+    # Pilih dan ubah nama kolom untuk dikirim kembali ke Laravel
     data_to_save = df[
         [
             "Nama",
@@ -88,4 +104,5 @@ def fetch_and_preprocess_data(api_url):
         ]
     ].rename(columns={"Nama": "nama"})
 
+    # Ubah DataFrame menjadi list of dictionaries (records) agar bisa dikirim via API
     return data_to_save.to_dict(orient="records")
