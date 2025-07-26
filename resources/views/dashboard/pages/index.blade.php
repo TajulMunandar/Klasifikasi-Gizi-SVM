@@ -141,9 +141,100 @@
             </table>
         </div>
     </div>
+
+    <div class="card mt-3">
+        <div class="card-body">
+            <form method="GET" action="{{ route('dashboard') }}">
+                <label for="anak" class="form-label">Pilih Anak:</label>
+                <select name="anak" id="anak" onchange="this.form.submit()" class="form-select">
+                    <option value="">-- Pilih Anak --</option>
+                    @foreach ($daftarAnak as $anak)
+                        <option value="{{ $anak->id }}" {{ request('anak') == $anak->id ? 'selected' : '' }}>
+                            {{ $anak->nama }} - {{ $anak->nik }}
+                        </option>
+                    @endforeach
+                </select>
+            </form>
+
+            @if (!$dataGrafik->isEmpty())
+                <canvas id="klasifikasiChart"></canvas>
+            @endif
+        </div>
+    </div>
 @endsection
 
 @push('js')
+    <script>
+        const ctx = document.getElementById('klasifikasiChart').getContext('2d');
+
+        const rawData = {!! json_encode($dataGrafik) !!};
+
+        // Mapping teks ke angka untuk ditampilkan di chart
+        const klasifikasiMap = {
+            'Gizi Buruk': 1,
+            'Gizi Kurang': 2,
+            'Gizi Baik': 3,
+            'Risiko Gizi Lebih': 4
+        };
+
+        const labels = rawData.map((_, index) => `Kunjungan ke-${index + 1}`);
+        const data = rawData.map(item => klasifikasiMap[item.klasifikasi] ?? null);
+
+        const klasifikasiChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Riwayat Klasifikasi Gizi',
+                    data: data,
+                    borderColor: 'blue',
+                    backgroundColor: 'rgba(0, 0, 255, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true,
+                    pointRadius: 5,
+                    pointBackgroundColor: 'blue',
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = Object.keys(klasifikasiMap).find(key => klasifikasiMap[key] ===
+                                    context.raw);
+                                return label ?? context.raw;
+                            }
+                        }
+                    },
+                    legend: {
+                        display: true
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 1,
+                        max: 4,
+                        ticks: {
+                            stepSize: 1,
+                            callback: function(value) {
+                                return Object.keys(klasifikasiMap).find(key => klasifikasiMap[key] === value) ??
+                                    value;
+                            }
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Tanggal'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
     <script>
         var isMobile = window.innerWidth <= 768;
         $(document).ready(function() {

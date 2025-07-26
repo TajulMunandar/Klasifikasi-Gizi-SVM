@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Classification;
+use App\Models\DataAnak;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -22,20 +23,38 @@ class DashboardController extends Controller
             });
         }
 
+        $daftarAnak = DataAnak::whereIn('id', function ($query) {
+            $query->selectRaw('MIN(id)')
+                ->from('data_anaks')
+                ->groupBy('nik');
+        })->get();
+
         $hasilKlasifikasi = $query->latest()->get();
 
         // Ambil daftar desa unik dari data anak
-        $daftarDesa = \App\Models\DataAnak::select('desa')->distinct()->pluck('desa');
+        $daftarDesa = DataAnak::select('desa')->distinct()->pluck('desa');
 
         $jumlahGiziBaik = $hasilKlasifikasi->where('klasifikasi', 'Gizi Baik')->count();
         $jumlahGiziKurangBaik = $hasilKlasifikasi->where('klasifikasi', 'Gizi Kurang')->count();
         $jumlahGiziBuruk = $hasilKlasifikasi->where('klasifikasi', 'Gizi Buruk')->count();
         $RisikoGiziLebih = $hasilKlasifikasi->where('klasifikasi', 'Risiko Gizi Lebih')->count();
 
-        $daftarDesa = \App\Models\DataAnak::select('desa')->distinct()->pluck('desa');
+        $dataGrafik = collect();
+
+        if ($request->filled('anak')) {
+            $dataGrafik = DB::table('classifications')
+                ->join('data_anaks', 'classifications.id_data_anak', '=', 'data_anaks.id')
+                ->where('data_anaks.id', $request->anak) // filter berdasarkan anak yang dipilih
+                ->orderBy('data_anaks.tgl_pengukuran')
+                ->get([
+                    'data_anaks.tgl_pengukuran as tanggal',
+                    'classifications.klasifikasi'
+                ]);
+        }
+
 
         $page = 'Dashboard';
-        return view('dashboard.pages.index', compact('page', 'hasilKlasifikasi', 'daftarDesa', 'jumlahGiziBaik', 'jumlahGiziKurangBaik', 'RisikoGiziLebih', 'jumlahGiziBuruk'));
+        return view('dashboard.pages.index', compact('page', 'hasilKlasifikasi', 'daftarDesa', 'jumlahGiziBaik', 'jumlahGiziKurangBaik', 'RisikoGiziLebih', 'jumlahGiziBuruk', 'daftarAnak', 'dataGrafik'));
     }
 
     public function statistikKlasifikasiPerDesa()

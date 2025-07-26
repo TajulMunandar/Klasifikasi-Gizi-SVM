@@ -10,6 +10,7 @@ import joblib
 app = Flask(__name__)
 CORS(app)  # Izinkan CORS agar API bisa diakses dari domain lain (misal React/Laravel)
 
+
 # Route untuk menjalankan proses preprocessing
 @app.route("/run-preprocessing")
 def run_preprocessing():
@@ -29,20 +30,31 @@ def run_preprocessing():
 
         # Cek jika berhasil dikirim
         if response.status_code == 201:
-            return jsonify({"message": "Preprocessing berhasil dikirim ke database"}), 200
+            return (
+                jsonify({"message": "Preprocessing berhasil dikirim ke database"}),
+                200,
+            )
         else:
-            return jsonify({
-                "message": "Gagal mengirim data ke Laravel",
-                "details": response.text,
-            }), 500
+            return (
+                jsonify(
+                    {
+                        "message": "Gagal mengirim data ke Laravel",
+                        "details": response.text,
+                    }
+                ),
+                500,
+            )
 
     except Exception as e:
         # Tangani error jika terjadi
         print("ERROR:", str(e))
-        return jsonify({
-            "message": "Terjadi kesalahan saat preprocessing",
-            "error": str(e)
-        }), 500
+        return (
+            jsonify(
+                {"message": "Terjadi kesalahan saat preprocessing", "error": str(e)}
+            ),
+            500,
+        )
+
 
 # Route untuk menjalankan training model ML
 @app.route("/run-training")
@@ -55,21 +67,28 @@ def run_training():
         hasil = train_model(api_url)
 
         # Kembalikan response dengan hasil training
-        return make_response(jsonify({
-            "message": "Training berhasil dijalankan",
-            "data": hasil["hasil"],                    # Data prediksi hasil training
-            "confusion_matrix": hasil["confusion_matrix"],  # Confusion matrix
-            "evaluasi": hasil["evaluasi"],              # Evaluasi (precision, recall, f1-score)
-            "accuracy": hasil["accuracy"],              # Akurasi model
-        }), 200)
+        return make_response(
+            jsonify(
+                {
+                    "message": "Training berhasil dijalankan",
+                    "data": hasil["hasil"],  # Data prediksi hasil training
+                    "confusion_matrix": hasil["confusion_matrix"],  # Confusion matrix
+                    "evaluasi": hasil[
+                        "evaluasi"
+                    ],  # Evaluasi (precision, recall, f1-score)
+                    "accuracy": hasil["accuracy"],  # Akurasi model
+                }
+            ),
+            200,
+        )
 
     except Exception as e:
         # Tangani error training
         print("ERROR:", str(e))
-        return make_response(jsonify({
-            "message": "Gagal menjalankan training",
-            "error": str(e)
-        }), 500)
+        return make_response(
+            jsonify({"message": "Gagal menjalankan training", "error": str(e)}), 500
+        )
+
 
 # Route untuk prediksi gizi anak berdasarkan input user
 @app.route("/predict", methods=["POST"])
@@ -83,7 +102,9 @@ def predict():
 
         # Siapkan data fitur yang akan diprediksi
         features = [
-            input_data["jenis_kelamin"],  # L/P -> 0/1 (pastikan preprocessing sebelumnya konsisten)
+            input_data[
+                "jenis_kelamin"
+            ],  # L/P -> 0/1 (pastikan preprocessing sebelumnya konsisten)
             input_data["usia_bulan"],
             input_data["berat"],
             input_data["tinggi"],
@@ -95,7 +116,9 @@ def predict():
 
         # Lakukan prediksi
         prediction = model.predict(X_input)[0]
-        probability = model.predict_proba(X_input)[0].max()  # Ambil probabilitas tertinggi
+        probability = model.predict_proba(X_input)[
+            0
+        ].max()  # Ambil probabilitas tertinggi
 
         # Pemetaan label hasil prediksi
         label_map = {
@@ -106,14 +129,17 @@ def predict():
         }
 
         # Kembalikan hasil prediksi dan probabilitas
-        return jsonify({
-            "prediksi": label_map.get(prediction, "Tidak Dikenal"),
-            "probabilitas": round(float(probability), 4)
-        })
+        return jsonify(
+            {
+                "prediksi": label_map.get(prediction, "Tidak Dikenal"),
+                "probabilitas": round(float(probability), 4),
+            }
+        )
 
     except Exception as e:
         # Tangani error saat prediksi
         return jsonify({"error": str(e)}), 500
+
 
 # Jalankan Flask app
 if __name__ == "__main__":

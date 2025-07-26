@@ -13,24 +13,6 @@ def fetch_and_preprocess_data(api_url):
     # Ubah data JSON menjadi DataFrame pandas
     df = pd.DataFrame(data)
 
-    # Tampilkan data awal sebelum preprocessing (debugging)
-    print("DataFrame sebelum dropna:")
-    print(
-        df[
-            [
-                "Nama",
-                "Usia Saat Ukur",
-                "ZS BB/U",
-                "ZS TB/U",
-                "ZS BB/TB",
-                "Berat",
-                "Tinggi",
-                "JK",
-                "BB/TB",
-            ]
-        ]
-    )
-
     # Fungsi untuk mengubah format usia dari "X Tahun - Y Bulan" menjadi total bulan
     def parse_age(age_str):
         match = re.match(r"(\d+) Tahun - (\d+) Bulan", str(age_str))
@@ -41,7 +23,7 @@ def fetch_and_preprocess_data(api_url):
         return None  # Jika format tidak sesuai
 
     # Tambahkan kolom usia dalam bulan
-    df["usia_bulan"] = df["Usia Saat Ukur"].apply(parse_age)
+    df["usia_bulan"] = pd.to_numeric(df["Usia Saat Ukur"], errors="coerce")
 
     # Konversi kolom numerik dari string ke float, jika gagal beri NaN
     df["zs_bb_u"] = pd.to_numeric(df["ZS BB/U"], errors="coerce")
@@ -73,7 +55,24 @@ def fetch_and_preprocess_data(api_url):
 
     # Tambahkan kolom label klasifikasi gizi
     df["label_gizi"] = df["BB/TB"].apply(label_gizi)
-
+    print("Cek NaN per kolom:")
+    print(
+        df[
+            [
+                "usia_bulan",
+                "zs_bb_u",
+                "zs_tb_u",
+                "zs_bb_tb",
+                "berat",
+                "tinggi",
+                "label_gizi",
+                "jenis_kelamin",
+                "Nama",
+            ]
+        ]
+        .isna()
+        .sum()
+    )
     # Hapus baris yang memiliki data penting yang kosong (NaN)
     df = df.dropna(
         subset=[
@@ -103,6 +102,7 @@ def fetch_and_preprocess_data(api_url):
             "label_gizi",
         ]
     ].rename(columns={"Nama": "nama"})
+    print("DataFrame sebelum dropna:", data_to_save)
 
     # Ubah DataFrame menjadi list of dictionaries (records) agar bisa dikirim via API
     return data_to_save.to_dict(orient="records")
